@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { Users } from '@lucide/vue';
+import { CalendarCheck, Clock, Users } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
+import StatKpiCard from '@/components/StatKpiCard.vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -34,6 +35,8 @@ defineProps<{
         employesActifs: number;
         congesEnAttente: number;
         presencesAujourdhui: number;
+        totalEmployes: number;
+        congesApprouves: number;
     };
     employes: EmployeRow[];
     congesEnAttente: CongeRow[];
@@ -60,78 +63,38 @@ defineOptions({
             description="Suivi des employés, des congés et des présences"
         />
 
-        <div class="grid gap-4 md:grid-cols-3">
-            <Card>
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium text-muted-foreground">
-                        Employés actifs
-                    </CardTitle>
-                </CardHeader>
-                <CardContent class="text-2xl font-semibold tabular-nums">
-                    {{ stats.employesActifs }}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium text-muted-foreground">
-                        Congés en attente
-                    </CardTitle>
-                </CardHeader>
-                <CardContent class="text-2xl font-semibold tabular-nums">
-                    {{ stats.congesEnAttente }}
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle class="text-sm font-medium text-muted-foreground">
-                        Présences aujourd’hui
-                    </CardTitle>
-                </CardHeader>
-                <CardContent class="text-2xl font-semibold tabular-nums">
-                    {{ stats.presencesAujourdhui }}
-                </CardContent>
-            </Card>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <StatKpiCard
+                label="Employés actifs"
+                :value="stats.employesActifs"
+                :hint="`${stats.totalEmployes} fiches`"
+                :icon="Users"
+                tint="bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300"
+            />
+            <StatKpiCard
+                label="Congés en attente"
+                :value="stats.congesEnAttente"
+                :icon="CalendarCheck"
+                tint="bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300"
+            />
+            <StatKpiCard
+                label="Congés approuvés"
+                :value="stats.congesApprouves"
+                :icon="CalendarCheck"
+                tint="bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300"
+            />
+            <StatKpiCard
+                label="Présences aujourd’hui"
+                :value="stats.presencesAujourdhui"
+                :icon="Clock"
+                tint="bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300"
+            />
         </div>
 
-        <div class="grid gap-4 lg:grid-cols-2">
+        <div class="grid gap-4 lg:grid-cols-3">
             <Card>
                 <CardHeader>
-                    <CardTitle class="flex items-center gap-2">
-                        <Users class="size-4" />
-                        Derniers employés
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p
-                        v-if="employes.length === 0"
-                        class="text-sm text-muted-foreground"
-                    >
-                        Aucun employé enregistré.
-                    </p>
-                    <ul v-else class="divide-y divide-border">
-                        <li
-                            v-for="employe in employes"
-                            :key="employe.id"
-                            class="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0"
-                        >
-                            <div>
-                                <p class="font-medium">
-                                    {{ employe.prenom }} {{ employe.nom }}
-                                </p>
-                                <p class="text-muted-foreground">
-                                    {{ employe.poste }} · {{ employe.departement }}
-                                </p>
-                            </div>
-                            <Badge variant="secondary">{{
-                                employe.statut
-                            }}</Badge>
-                        </li>
-                    </ul>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Congés à traiter</CardTitle>
+                    <CardTitle>Demandes à traiter</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <p
@@ -140,21 +103,72 @@ defineOptions({
                     >
                         Aucune demande en attente.
                     </p>
-                    <ul v-else class="divide-y divide-border">
+                    <ul v-else class="space-y-4">
                         <li
                             v-for="conge in congesEnAttente"
                             :key="conge.id"
-                            class="flex items-center justify-between gap-3 py-3 text-sm first:pt-0 last:pb-0"
+                            class="flex items-center justify-between gap-3"
                         >
-                            <div>
-                                <p class="font-medium">{{ conge.employe }}</p>
-                                <p class="text-muted-foreground">
+                            <div class="flex size-10 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
+                                <CalendarCheck class="size-4" />
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate font-medium">
+                                    {{ conge.employe }}
+                                </p>
+                                <p class="text-sm text-muted-foreground">
                                     {{ conge.dateDebut }} → {{ conge.dateFin }}
                                 </p>
                             </div>
                             <Badge>{{ conge.type }}</Badge>
                         </li>
                     </ul>
+                </CardContent>
+            </Card>
+
+            <Card class="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Employés suivis</CardTitle>
+                </CardHeader>
+                <CardContent class="overflow-x-auto">
+                    <p
+                        v-if="employes.length === 0"
+                        class="text-sm text-muted-foreground"
+                    >
+                        Aucun employé enregistré.
+                    </p>
+                    <table v-else class="w-full min-w-[36rem] text-left text-sm">
+                        <thead class="text-muted-foreground">
+                            <tr class="border-b">
+                                <th class="pb-3 font-medium">Employé</th>
+                                <th class="pb-3 font-medium">Matricule</th>
+                                <th class="pb-3 font-medium">Poste</th>
+                                <th class="pb-3 font-medium">Département</th>
+                                <th class="pb-3 font-medium">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="employe in employes"
+                                :key="employe.id"
+                                class="border-b last:border-0"
+                            >
+                                <td class="py-3 font-medium">
+                                    {{ employe.prenom }} {{ employe.nom }}
+                                </td>
+                                <td class="py-3 tabular-nums text-muted-foreground">
+                                    {{ employe.matricule }}
+                                </td>
+                                <td class="py-3">{{ employe.poste }}</td>
+                                <td class="py-3">{{ employe.departement }}</td>
+                                <td class="py-3">
+                                    <Badge variant="secondary">{{
+                                        employe.statut
+                                    }}</Badge>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </CardContent>
             </Card>
         </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Logistique;
 use App\Actions\Dashboard\BuildDashboardOverview;
 use App\Http\Controllers\Controller;
 use App\Models\Logistique\Commande;
+use App\Models\Logistique\Livraison;
 use App\Models\Logistique\Produit;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,6 +40,18 @@ class OverviewController extends Controller
                     'fournisseur' => $commande->fournisseur->nom,
                     'dateCommande' => $commande->date_commande->toDateString(),
                     'statut' => $commande->statut->value,
+                ]),
+            'livraisons' => Livraison::query()
+                ->with(['commande.fournisseur', 'vehicule'])
+                ->latest('date_livraison')
+                ->limit(6)
+                ->get()
+                ->map(fn (Livraison $livraison): array => [
+                    'id' => $livraison->id,
+                    'fournisseur' => $livraison->commande->fournisseur->nom,
+                    'vehicule' => $livraison->vehicule->immatriculation,
+                    'dateLivraison' => $livraison->date_livraison->toDateString(),
+                    'statut' => $livraison->statut->value,
                 ]),
         ]);
     }

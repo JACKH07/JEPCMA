@@ -48,6 +48,8 @@ test('dashboard widgets display live module statistics', function () {
             ->where('logistique.commandesEnCours', 1)
             ->has('finance.depensesMois')
             ->has('finance.entreesMois')
+            ->has('finance.depensesParJour')
+            ->has('logistique.vehiculesParStatut')
             ->has('alertes', 2),
         );
 });
